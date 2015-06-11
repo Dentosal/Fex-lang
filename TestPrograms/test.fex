@@ -1,2 +1,5 @@
 io.out("5! is ")
 io.print(mul(range(1, 6)))
+
+io.out(io.out("Test"))
+io.out("\n")

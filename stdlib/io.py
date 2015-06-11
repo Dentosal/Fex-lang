@@ -20,7 +20,7 @@ def f_out(args):
     out_str = format_to_string(args[0])
     sys.stdout.write(out_str)
     sys.stdout.flush()
-    return args
+    return args[0]
 def f_print(args):
     """ Outputs line of text. If given multiple arguments, outputs them space-separated. """
     sys.stdout.write(" ".join([format_to_string(a) for a in args])+"\n")
