@@ -1,7 +1,9 @@
-import sys
+MODULE_NAME = "io"
 
+import sys
 import datatypes
 from meta import error, AbortExecution
+
 
 def format_to_string(item):
     """ Formats value of object to printable string. """
@@ -26,3 +28,9 @@ def f_print(args):
     sys.stdout.write(" ".join([format_to_string(a) for a in args])+"\n")
     sys.stdout.flush()
     return args
+
+def f_read(args):
+    """ Reads one line from stdin and returns it as string. """
+    if len(args) != 0:
+        error("Invalid number of arguments (%s) for '%s'" % (len(args), "read"))
+    return datatypes.String(raw_input())

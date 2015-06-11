@@ -7,10 +7,10 @@ import importlib
 
 import datatypes
 from meta import Token, AbortExecution, error
-
+import corefunctions
 import parser
 
-import corefunctions
+
 
 
 def init_namespace_functions(namespace):
@@ -22,7 +22,10 @@ def init_namespace_functions(namespace):
 	for file in [fn for fn in os.listdir("stdlib") if fn.endswith(".py")]:
 		lib = importlib.import_module("stdlib."+file.split(".")[0])
 		for function in [f for f in dir(lib) if f.startswith("f_")]:
-			namespace[".".join([file.split(".")[0], function[2:]])] = datatypes.PythonFunction(getattr(lib, function))
+			try:
+				namespace[".".join([lib.MODULE_NAME, function[2:]])] = datatypes.PythonFunction(getattr(lib, function))
+			except AttributeError:
+				error("Module 'stdlib.%s' does not define 'MODULE_NAME'" % file.split(".")[0])
 	return namespace
 
 
