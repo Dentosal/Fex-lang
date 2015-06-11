@@ -9,6 +9,10 @@ interpreter core
 corefunctions
 =============
 
+Regex
+-----
+Some kind of regex
+
 Array
 -----
 * filter
@@ -29,7 +33,10 @@ stdlib
 
 IO
 --
-* readline
 * file IO system
 * sockets
 * `os` module interface
+
+Math
+----
+* sin, cos, tan, asin, acos, atan, atan2, pi, e

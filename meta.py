@@ -4,7 +4,7 @@ def dectectTokenType(symbol, line):
 		return "string"
 	elif re.match("\\-?[0-9]+$", symbol):
 		return "integer"
-	elif len(symbol) > 1 and re.match("\\-?[0-9]*\\.[0-9]*$", symbol):
+	elif len(symbol) > 1 and re.match("\\-?[0-9]+\\.[0-9]+$", symbol):
 		return "float"
 	elif re.match("^[a-zA-Z_][a-zA-Z0-9_\\.]*$", symbol) and symbol[-1] != ".":
 		return "symbol"

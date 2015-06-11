@@ -14,9 +14,8 @@ missing:
 Functions `import` and `exit` are implemented straight into interpreter.
 
 """
-
+import re
 import sys
-import traceback
 
 import datatypes
 from meta import error, AbortExecution
@@ -389,6 +388,30 @@ def f_count(args):
 		return datatypes.Integer(ret)
 
 # type conversions
+def f_int(args):
+	if len(args) != 1:
+		error("Invalid number of arguments (%s) for '%s'" % (len(args), "int"))
+	if isinstance(args[0], datatypes.Integer) or isinstance(args[0], datatypes.Float):
+		return datatypes.Integer(args[0].value)
+	elif isinstance(args[0], datatypes.String):
+		if re.findall("^\\d+$", args[0].value) != []:
+			return datatypes.Integer(args[0].value)
+		else:
+			error("Invalid literal for '%s': '%s'" % ("int", args[0].value))
+	else:
+		error("Cannot convert from type '%s' to '%s'" % (args[0].TYPE, "integer"))
+def f_flt(args):
+	if len(args) != 1:
+		error("Invalid number of arguments (%s) for '%s'" % (len(args), "flt"))
+	if isinstance(args[0], datatypes.Integer) or isinstance(args[0], datatypes.Float):
+		return datatypes.Float(args[0].value)
+	elif isinstance(args[0], datatypes.String):
+		if re.findall("^\\d+.\\d+$", args[0].value) != [] or re.findall("^\\d+$", args[0].value) != []:
+			return datatypes.Float(args[0].value)
+		else:
+			error("Invalid literal for '%s': '%s'" % ("flt", args[0].value))
+	else:
+		error("Cannot convert from type '%s' to '%s'" % (args[0].TYPE, "float"))
 
 # aliases
 f_sum = f_add
