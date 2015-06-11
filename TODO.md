@@ -1,19 +1,22 @@
-Some missing functions from `corefunctions`
-==========================================
-
-Math
+TODO
 ====
-* all trig missing
-* pi, e (constants, but still, "constant functions")
+
+interpreter core
+================
+* import
+
+
+corefunctions
+=============
 
 Array
-=====
+-----
 * filter
 * "foreach" list comprehension
 * reduce??
 
 Control
-=======
+-------
 There is no need for `for`, because array operations are good enough.
 * if-else
 * switch-case
@@ -21,10 +24,12 @@ There is no need for `for`, because array operations are good enough.
 * while
 
 
+stdlib
+======
 
 IO
-==
+--
 * readline
-* full file IO system
+* file IO system
 * sockets
 * `os` module interface

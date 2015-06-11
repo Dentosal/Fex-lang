@@ -1,7 +1,2 @@
-list(1, 2, 3)
-exit()
-io.print(
-	list(1, 2, 3),
-	list(2, 3, 4)
-)
-io.out(list(1, 2, 3))
+io.out("5! is ")
+io.print(mul(range(1, 6)))

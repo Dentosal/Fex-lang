@@ -11,7 +11,7 @@ missing:
 	* Flow Control: [if, while, repeat]
 
 
-Functions `require` and `exit` are implemented straight into interpreter.
+Functions `import` and `exit` are implemented straight into interpreter.
 
 """
 
@@ -92,7 +92,7 @@ def f_mul(args):
 		error("Invalid number of arguments (%s) for '%s'" % (0, "mul"))
 	elif len(args) == 1:
 		if isinstance(args[0], datatypes.List):
-			return f_add(args[0].value)
+			return f_mul(args[0].value)
 		else:
 			return args[0]
 

@@ -1,6 +1,8 @@
 import re
 import os
 import sys
+import importlib
+
 
 
 import datatypes
@@ -10,11 +12,24 @@ import parser
 
 import corefunctions
 
-NO_VARIABLE_INSERT_TOKENS = ["__symbol__", "__block__"]
+
+def init_namespace_functions(namespace):
+	# from corefunctions
+	for function in [f for f in dir(corefunctions) if f.startswith("f_")]:
+		namespace[function[2:]] = datatypes.PythonFunction(getattr(corefunctions, function))
+
+	# from stdlib
+	for file in [fn for fn in os.listdir("stdlib") if fn.endswith(".py")]:
+		lib = importlib.import_module("stdlib."+file.split(".")[0])
+		for function in [f for f in dir(lib) if f.startswith("f_")]:
+			namespace[".".join([file.split(".")[0], function[2:]])] = datatypes.PythonFunction(getattr(lib, function))
+	return namespace
+
+
 
 
 def call_function(function, args, namespace):
-	# in-complier functions (currently cannot be overwrited)
+	# in-compiler functions (currently cannot be overwrited)
 	if function == "exit":
 		if len(args) == 0:
 			sys.exit(0)
@@ -25,15 +40,15 @@ def call_function(function, args, namespace):
 				error("Invalid exid code type '%s'." % args[0].TYPE)
 		else:
 			error("exit(): invalid number of arguments: %i" % len(args))
+	elif function == "import":
+		error("Intepreter Error: Function 'import' is not implemented")
 
-	# TODO: test function in namespace
-
-	# from corefunctions
-	try:
-		res = getattr(corefunctions, 'f_'+function)(args)
-		return res, namespace
-	except AttributeError:
-		pass
+	# test if function is in namespace
+	if function in namespace.keys():
+		if isinstance(namespace[function], datatypes.Function):
+			return namespace[function].call(args), namespace
+		else:
+			error("Cannot call non-callable type '%s'" % namespace[function].TYPE)
 
 	# function not found
 	error("No function named '%s'." % function)
@@ -59,7 +74,7 @@ def run_file(filename):
 	with open(filename) as fo:
 		contents = fo.read().replace("\r\n", "").split("\n")
 	code = parser.organise(parser.parse(contents))
-	namespace = {"__file__":filename}
+	namespace = init_namespace_functions({"__file__": datatypes.String("<interactive>")})
 	for expr in code:
 		res, namespace = execute(expr, namespace)
 #		namespace["_"] = res[0]
@@ -67,15 +82,16 @@ def run_file(filename):
 def run_ia():
 	""" interactive interpreter """
 	print "Interactive interpreter:"
-	namespace = {"__file__": "<interactive>"}
+	namespace = init_namespace_functions({"__file__": datatypes.String("<interactive>")})
 	while True:
 		inp = raw_input(">>> ").strip()
 		if inp == "":
 			continue
+		if inp == "exit":
+			print "Use exit() to exit."
+			continue
 		if inp[0] == "!":
-			if inp[1:] == "exit":
-				sys.exit(0)
-			elif inp[1:] == "ns":
+			if inp[1:] == "ns":
 				print namespace
 			elif inp[1:] == "clear":
 				os.system("clear")
@@ -84,13 +100,13 @@ def run_ia():
 			continue
 		try:
 			res, namespace = execute(parser.organise(parser.parse([inp]))[0], namespace)
+		except AbortExecution, e:
+			print "Error:", e
 		except Exception, e:
 			print "Interactive Interpreter Error:", e
 			print "This is most likely bug in the interpreter."
 			print "TRACING BACK:"
 			raise
-		except AbortExecution, e:
-			print "Error:", e
 		else:
 			print res
 

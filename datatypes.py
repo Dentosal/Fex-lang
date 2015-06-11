@@ -30,3 +30,15 @@ class List(Datatype):
 	TYPE = "list"
 	def __init__(self, value):
 		self.value = value
+
+class Function:
+	TYPE = "function"
+	FTYPE = "" # function call type: "python" or "fex"
+	def call(self, args):
+		pass
+class PythonFunction(Function):
+	FTYPE = "python"
+	def __init__(self, function):
+		self.function = function
+	def call(self, args):
+		return self.function(args)
