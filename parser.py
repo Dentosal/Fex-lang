@@ -1,48 +1,103 @@
+import re
 import datatypes
-from meta import Token, AbortExecution, error
+from meta import Token, AbortExecution, error, dectectTokenType
 
-def dectectTokenType(symbol, line):
-	if symbol[0] == "\"":
-		return "string"
-	elif re.match("\\-?[0-9]+$", symbol):
-		return "integer"
-	elif len(symbol) > 1 and re.match("\\-?[0-9]*\\.[0-9]*$", symbol):
-		return "float"
-	elif re.match("^[a-zA-Z_][a-zA-Z0-9_\\.]*$", symbol) and symbol[-1] != ".":
-		return "symbol"
-	elif symbol in list("([{}]),"):
-		return {"(": "args_start", ")": "args_end", "{": "block_start", "}": "block_end",
-				"[": "symbol_start", "]": "symbol_end", ",": "arg_separator"}[symbol]
-	else:
-		error("Invalid object '%s' in line %i" % (symbol, line))
 
-        def parse(source):
-        	tokens = []
-        	strings = []
-        	# process source line-by-line and create token list
-        	for lineIndex in range(len(source)):
-        		line = source[lineIndex]
-        		# collect strings
-        		for i in re.findall("(\"\"|\".*?[^\\\\]\")", line):
-        			w = i.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t").replace("\\\"", "\"")
-        			strings.append(w)
-        			line = line.replace(w, " \" ")
-        		# add spaces
-        		for c in list("([{}]),"):
-        			line = line.replace(c, " "+c+" ")
-        		# split
-        		for t in line.split():
-        			tokens.append(Token(t, lineIndex+1))
-        	# put strings back to tokens and handle other token values as well
-        	for t in range(len(tokens)):
-        		if tokens[t].type == "string":
-        			tokens[t].value = datatypes.String(strings[0][1:-1])
-        			strings = strings[1:]
-        		elif tokens[t].type == "integer":
-        			tokens[t].value = datatypes.Integer(tokens[t].data)
-        		elif tokens[t].type == "float":
-        			tokens[t].value = datatypes.Float(tokens[t].data)
-        		elif tokens[t].type == "symbol":
-        			tokens[t].value = datatypes.Symbol(tokens[t].data)
+def parse(source):
+	tokens = []
+	strings = []
+	# process source line-by-line and create token list
+	for lineIndex in range(len(source)):
+		line = source[lineIndex]
+		# collect strings
+		for i in re.findall("(\"\"|\".*?[^\\\\]\")", line):
+			w = i.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t").replace("\\\"", "\"")
+			strings.append(w)
+			line = line.replace(w, " \" ")
+		# add spaces
+		for c in list("([{}]),"):
+			line = line.replace(c, " "+c+" ")
+		# split
+		for t in line.split():
+			tokens.append(Token(t, lineIndex+1))
+	# put strings back to tokens and handle other token values as well
+	for t in range(len(tokens)):
+		if tokens[t].type == "string":
+			tokens[t].value = datatypes.String(strings[0][1:-1])
+			strings = strings[1:]
+		elif tokens[t].type == "integer":
+			tokens[t].value = datatypes.Integer(tokens[t].data)
+		elif tokens[t].type == "float":
+			tokens[t].value = datatypes.Float(tokens[t].data)
+		elif tokens[t].type == "symbol":
+			tokens[t].value = datatypes.Symbol(tokens[t].data)
 
-        	return tokens
+	return tokens
+
+
+def parse_function_call(expr):
+	if isinstance(expr, Token):
+		return expr
+	if len(expr) == 0:
+		return None
+	if len(expr) == 1:
+		if expr[0].type in ["string", "integer", "float", "symbol"]:
+			return expr[0]
+		else:
+			error("Invalid type '%s' for function call", expr[1].type)
+	if expr[0].type != "symbol" or expr[1].type != "args_start" or expr[-1].type != "args_end":
+		if expr[0].line == expr[-1].line:
+			error("Invalid function call in line %i" % expr[0].line)
+		else:
+			error("Invalid function call from line %i to line %i" % (expr[0].line, expr[-1].line))
+	fun_name = expr[0].data
+	# iterate over arguments
+	args = []
+	i = 2
+	while i < len(expr)-1:
+		e = expr[i]
+		if e.type in ["string", "integer", "float"]:
+			args.append(e)
+		elif e.type == "arg_separator":
+			pass
+		elif e.type == "symbol":
+			if expr[i+1].type == "args_start":
+				p_level = 0
+				buffer = [expr[i]]
+				i += 1
+				while i < len(expr)-1:
+					buffer.append(expr[i])
+					if expr[i].type == "args_start":
+						p_level += 1
+					elif expr[i].type == "args_end":
+						p_level -= 1
+						if p_level == 0:
+							break
+					i += 1
+				if p_level != 0:
+					error("Unbalanced parenthesis in line %i" % expr[i].line)
+				args.append(parse_function_call(buffer))
+			else:
+				args.append(e)
+		else:
+			error("Internal interpreter error.")
+		i += 1
+	return [fun_name, args]
+
+def organise(code):
+	# split to expressions
+	expressions = []
+	buffer = []
+	p_level = 0
+	for item in code:
+		buffer.append(item)
+		if item.type == "args_start":
+			p_level += 1
+		elif item.type == "args_end":
+			p_level -= 1
+			if p_level == 0:
+				expressions.append(buffer)
+				buffer = []
+	expressions.append(buffer)
+	expressions = [parse_function_call(e) for e in expressions if e != []]
+	return expressions

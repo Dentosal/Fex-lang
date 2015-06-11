@@ -6,83 +6,16 @@ import sys
 import datatypes
 from meta import Token, AbortExecution, error
 
+import parser
+
 import corefunctions
 
 NO_VARIABLE_INSERT_TOKENS = ["__symbol__", "__block__"]
 
 
-
-
-def parse_function_call(expr):
-	if isinstance(expr, Token):
-		return expr
-	if len(expr) == 0:
-		return None
-	if len(expr) == 1:
-		if expr[0].type in ["string", "integer", "float", "symbol"]:
-			return expr[0]
-		else:
-			error("Invalid type '%s' for function call", expr[1].type)
-	if expr[0].type != "symbol" or expr[1].type != "args_start" or expr[-1].type != "args_end":
-		if expr[0].line == expr[-1].line:
-			error("Invalid function call in line %i" % expr[0].line)
-		else:
-			error("Invalid function call from line %i to line %i" % (expr[0].line, expr[-1].line))
-	fun_name = expr[0].data
-	# iterate over arguments
-	args = []
-	i = 2
-	while i < len(expr)-1:
-		e = expr[i]
-		if e.type in ["string", "integer", "float"]:
-			args.append(e)
-		elif e.type == "arg_separator":
-			pass
-		elif e.type == "symbol":
-			if expr[i+1].type == "args_start":
-				p_level = 0
-				buffer = [expr[i]]
-				i += 1
-				while i < len(expr)-1:
-					buffer.append(expr[i])
-					if expr[i].type == "args_start":
-						p_level += 1
-					elif expr[i].type == "args_end":
-						p_level -= 1
-						if p_level == 0:
-							break
-					i += 1
-				if p_level != 0:
-					error("Unbalanced parenthesis in line %i" % expr[i].line)
-				args.append(parse_function_call(buffer))
-			else:
-				args.append(e)
-		else:
-			error("Internal interpreter error.")
-		i += 1
-	return [fun_name, args]
-
-def organise(code):
-	# split to expressions
-	expressions = []
-	buffer = []
-	p_level = 0
-	for item in code:
-		buffer.append(item)
-		if item.type == "args_start":
-			p_level += 1
-		elif item.type == "args_end":
-			p_level -= 1
-			if p_level == 0:
-				expressions.append(buffer)
-				buffer = []
-	expressions.append(buffer)
-	expressions = [parse_function_call(e) for e in expressions if e != []]
-	return expressions
-
 def call_function(function, args, namespace):
 	# in-complier functions (currently cannot be overwrited)
-	if expr[0] == "exit":
+	if function == "exit":
 		if len(args) == 0:
 			sys.exit(0)
 		elif len(args) == 1:
@@ -97,13 +30,13 @@ def call_function(function, args, namespace):
 
 	# from corefunctions
 	try:
-		res = getattr(corefunctions, 'f_'+expr[0])(expr[1])
+		res = getattr(corefunctions, 'f_'+function)(args)
 		return res, namespace
 	except AttributeError:
 		pass
 
 	# function not found
-	error("No function named '%s'." % expr[0])
+	error("No function named '%s'." % function)
 
 def execute(expr, namespace):
 	try:
@@ -125,7 +58,7 @@ def execute(expr, namespace):
 def run_file(filename):
 	with open(filename) as fo:
 		contents = fo.read().replace("\r\n", "").split("\n")
-	code = organise(parse(contents))
+	code = parser.organise(parser.parse(contents))
 	namespace = {"__file__":filename}
 	for expr in code:
 		res, namespace = execute(expr, namespace)
@@ -150,9 +83,14 @@ def run_ia():
 				print "Invalid interactive interpreter instruction."
 			continue
 		try:
-			res, namespace = execute(organise(parse([inp]))[0], namespace)
-		except:
-			pass
+			res, namespace = execute(parser.organise(parser.parse([inp]))[0], namespace)
+		except Exception, e:
+			print "Interactive Interpreter Error:", e
+			print "This is most likely bug in the interpreter."
+			print "TRACING BACK:"
+			raise
+		except AbortExecution, e:
+			print "Error:", e
 		else:
 			print res
 
