@@ -1,3 +1,6 @@
+# Meta does not import any of other project files.
+# Thats why it's possible to import it to every file.
+
 import re
 def dectectTokenType(symbol, line):
 	if symbol[0] == "\"":

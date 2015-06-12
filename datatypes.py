@@ -1,3 +1,4 @@
+from meta import error
 class Datatype:
 	TYPE = "data"
 	def __init__(self, value):
@@ -42,3 +43,30 @@ class PythonFunction(Function):
 		self.function = function
 	def call(self, args):
 		return self.function(args)
+
+
+
+# representation functions
+
+def string_escape(S):
+	if type(s) == type(""):
+		return S.replace("\t", "\\t").replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\"").replace("\\\\", "\\")
+	elif isinstance(S, String):
+		return string_escape(S.value)
+	else:
+		raise ValueError("Invalid convert.")
+
+def format_modify_for_type(S, T):
+	""" Special formatting, just like python's __repr__, but function, not method """
+	if T == "string":
+		S = "\"" + S.__repr__()[1:-1] + "\""
+	return S
+
+def format_to_string(item):
+	""" Formats value of object to printable string. """
+	if isinstance(item, String) or isinstance(item, Integer) or isinstance(item, Float):
+		return str(item.value)
+	elif isinstance(item, List):
+		return "[" + (", ".join([format_modify_for_type(format_to_string(i), i.TYPE) for i in item.value])) + "]"
+	else:
+		error("Unsupported type '%s' for '%s'" % (item.TYPE, "string_format"))

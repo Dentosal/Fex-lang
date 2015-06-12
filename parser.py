@@ -9,11 +9,41 @@ def parse(source):
 	# process source line-by-line and create token list
 	for lineIndex in range(len(source)):
 		line = source[lineIndex]
-		# collect strings
-		for i in re.findall("(\"\"|\".*?[^\\\\]\")", line):
-			w = i.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t").replace("\\\"", "\"")
-			strings.append(w)
-			line = line.replace(w, " \" ")
+		# collect strings (regex will not work, believe me, I have tried --Dentosal)
+		string_start_index = None
+		in_string = False
+		escape_mode = False
+		string = ""
+		ind = 0
+		while ind < len(line):
+			c = line[ind]
+			if in_string:
+				if escape_mode == False:
+					if c == "\\":
+						escape_mode = True
+					else:
+						string += c
+						if c == "\"":
+							strings.append(string)
+							line = list(line)
+							line[string_start_index:ind+1] = " \" "
+							line = "".join(line)
+							in_string = False
+				else:
+					if not c in "\"\\nrt":
+						error("Invalid escape inside string, line %i" % (lineIndex+1))
+					string += {"\"": "\"", "\\": "\\", "n": "\n", "t": "\t", "r": "\r"}[c]
+					escape_mode = False
+			else:
+				if c == "\"":
+					string = "\""
+					in_string = True
+					string_start_index = ind
+			ind += 1
+
+		if in_string:
+			error("End of line while scanning string literal, line %i" % (lineIndex+1))
+
 		# add spaces
 		for c in list("([{}]),"):
 			line = line.replace(c, " "+c+" ")

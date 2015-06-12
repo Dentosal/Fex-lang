@@ -1,7 +1,1 @@
-io.out("5! is ")
-io.print(mul(range(1, 6)))
-
-io.print(flt(io.read()))
-
-io.out(io.out("Test"))
-io.out("\n")
+io.print("5! is", mul(range(1, 6)))

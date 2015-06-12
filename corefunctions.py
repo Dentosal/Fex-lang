@@ -412,6 +412,15 @@ def f_flt(args):
 			error("Invalid literal for '%s': '%s'" % ("flt", args[0].value))
 	else:
 		error("Cannot convert from type '%s' to '%s'" % (args[0].TYPE, "float"))
+def f_str(args):
+	if len(args) != 1:
+		error("Invalid number of arguments (%s) for '%s'" % (len(args), "str"))
+	if isinstance(args[0], datatypes.Integer) or isinstance(args[0], datatypes.Float) or isinstance(args[0], datatypes.String):
+		return datatypes.String(args[0].value)
+	elif isinstance(args[0], datatypes.List):
+		return datatypes.String(datatypes.format_to_string(args[0]))
+	else:
+		error("Cannot convert from type '%s' to '%s'" % (args[0].TYPE, "string"))
 
 # aliases
 f_sum = f_add
