@@ -19,21 +19,38 @@ def init_namespace_functions(namespace):
 		namespace[function[2:]] = datatypes.PythonFunction(getattr(corefunctions, function))
 
 	# from stdlib
-	for file in [fn for fn in os.listdir("stdlib") if fn.endswith(".py")]:
+	for file in [fn for fn in os.listdir("stdlib") if fn.endswith(".py") and not fn.startswith("_")]:
 		lib = importlib.import_module("stdlib."+file.split(".")[0])
+		try:
+			namespace[lib.MODULE_NAME] = {}
+		except AttributeError:
+			error("Module 'stdlib.%s' does not define 'MODULE_NAME'" % file.split(".")[0])
 		for function in [f for f in dir(lib) if f.startswith("f_")]:
-			try:
-				namespace[".".join([lib.MODULE_NAME, function[2:]])] = datatypes.PythonFunction(getattr(lib, function))
-			except AttributeError:
-				error("Module 'stdlib.%s' does not define 'MODULE_NAME'" % file.split(".")[0])
+			namespace[lib.MODULE_NAME][function[2:]] = datatypes.PythonFunction(getattr(lib, function))
 	return namespace
 
 
 
+def resolve_object(object_name, namespace):
+	if object_name == "":
+		error("Intepreter error 3: Not implemented.")
+		#return datatypes.Namespace(--args--)
+	ns = namespace.copy()
+	for p in object_name.split("."):
+		if p in ns.keys():
+			ns = ns[p]
+		else:
+			return None
+	if type(ns) == type({}):
+		error("Intepreter error 3: Not implemented.")
+		#return datatypes.Namespace(--args--)
+	else:
+		return ns
 
-def call_function(function, args, namespace):
+
+def call_function(function_name, args, namespace):
 	# in-compiler functions (currently cannot be overwrited)
-	if function == "exit":
+	if function_name == "exit":
 		if len(args) == 0:
 			sys.exit(0)
 		elif len(args) == 1:
@@ -43,18 +60,19 @@ def call_function(function, args, namespace):
 				error("Invalid exid code type '%s'." % args[0].TYPE)
 		else:
 			error("exit(): invalid number of arguments: %i" % len(args))
-	elif function == "import":
+	elif function_name == "import":
 		error("Intepreter Error: Function 'import' is not implemented")
 
-	# test if function is in namespace
-	if function in namespace.keys():
-		if isinstance(namespace[function], datatypes.Function):
-			return namespace[function].call(args), namespace
-		else:
-			error("Cannot call non-callable type '%s'" % namespace[function].TYPE)
 
-	# function not found
-	error("No function named '%s'." % function)
+	object = resolve_object(function_name, namespace)
+	if object != None:
+		if isinstance(object, datatypes.Function):
+			return object.call(args), namespace
+		else:
+			error("Cannot call non-callable type '%s'" % namespace[function_name].TYPE)
+
+	# `function_name` not found
+	error("No function_name named '%s'." % function_name)
 
 def execute(expr, namespace):
 	try:
@@ -123,5 +141,6 @@ if __name__=="__main__":
 	else:	# run source file
 		try:
 			run_file(no_prefix_args[0])
-		except AbortExecution:
+		except AbortExecution, e:
+			print "Error:", e
 			sys.exit(1)

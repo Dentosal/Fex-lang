@@ -31,5 +31,4 @@ class AbortExecution(Exception):
 	pass
 
 def error(msg):
-	print "Error:", msg
-	raise AbortExecution
+	raise AbortExecution(msg)
