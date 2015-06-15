@@ -1,0 +1,3 @@
+io.out(list(42, 3.14, "Hello World!"))
+io.print(io.read())
+io.print(list(42, 3.14, "Hello World!"), 1, 2.5, "Hello")

@@ -11,8 +11,6 @@ import corefunctions
 import parser
 
 
-
-
 def init_namespace_functions(namespace):
 	# from corefunctions
 	for function in [f for f in dir(corefunctions) if f.startswith("f_")]:
