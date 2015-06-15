@@ -378,7 +378,7 @@ def f_length(args):
 	else:
 		return len(args[0].value)
 def f_count(args):
-	""" Set item at index """
+	""" Count amount of items (args[1]) in array (args[0]) """
 	if len(args) != 2:
 		error("Invalid number of arguments (%s) for '%s'" % (len(args), "count"))
 	array, item = args
@@ -394,6 +394,11 @@ def f_count(args):
 			if f_eq([av, item]):
 				ret += 1
 		return datatypes.Integer(ret)
+def f_contains(args):
+	""" Does list contain item """
+	if len(args) != 2:
+		error("Invalid number of arguments (%s) for '%s'" % (len(args), "count"))
+	return datatypes.Integer(f_count(args).value != 0)
 
 # type conversions
 def f_int(args):
