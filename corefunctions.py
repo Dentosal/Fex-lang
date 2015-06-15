@@ -32,7 +32,15 @@ def f_neq(args):
 		return datatypes.String(args[0].value[::-1])
 	else:
 		error("Unsupported operand for '%s' with basetype '%s': '%s'" % ("neq", basetype, args[0].TYPE))
-
+def f_abs(args):
+	if len(args) != 1:
+		error("Invalid number of arguments (%s) for '%s'" % (0, "neq"))
+	if isinstance(args[0], datatypes.Integer):
+		return datatypes.Integer(abs(args[0].value))
+	elif isinstance(args[0], datatypes.Float):
+		return datatypes.Float(abs(args[0].value))
+	else:
+		error("Unsupported operand for '%s' with basetype '%s': '%s'" % ("neq", basetype, args[0].TYPE))
 def f_add(args):
 	""" Add function (also sum function) """
 	if len(args) == 0:
