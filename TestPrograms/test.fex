@@ -1,1 +1,10 @@
-io.print("5! is", mul(range(1, 6)))
+num = 42
+pi = 3.14
+hw = "Hello World!"
+fact1 = x -> {mul(range(1, x))}
+fact2 = x -> if(gt(x, 1), {mul(fact(x-1), x)}, {0})
+items = list(num, pi, fact1, fact2, "Testing...")
+
+io.print(fact1(5))
+io.print(fact2(5))
+io.print(fact2(pi))

@@ -1,7 +1,10 @@
-mul(2, -3)
-mul(not(2), -3)
-sum(list(1, 2, 3))
-add(3, idiv(mul(2, sub(3, 1)), 2))
-print("Hello World!")
-define(__symbol__(fact),  __block__(if(gt(x, 1), mul(x, fact(sub(x, 1))), 1)))
-if(eq(fact(5), 120), __block__(print("I'm functional.")), __block__(print("Something went wrong.")))
+num = 42
+pi = 3.14
+hw = "Hello World!"
+fact1 = x -> {mul(range(1, x))}
+fact2 = x -> if(gt(x, 1), {mul(fact(x-1), x)}, {0})
+items = list(num, pi, fact1, fact2, "Testing...")
+
+io.print(fact1(5))
+io.print(fact2(5))
+io.print(fact2(pi))
